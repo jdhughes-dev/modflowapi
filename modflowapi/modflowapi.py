@@ -17,7 +17,9 @@ class ModflowApi(XmiWrapper):
 
     The XMI is the extension ``mf6.xmi`` and pointers to libmf6 memory come
     from ``mf6.pointers``. A pointer is valid from initialize to finalize
-    unless the variable is in the ``"bmi:pointers:transient"`` set.
+    unless the variable is in the ``"bmi:pointers:transient"`` set; those move
+    only in ``prepare_time_step`` (and PRT committed particles also in
+    ``finalize_time_step``), so fetch them again after ``prepare_time_step``.
     """
 
     def __init__(
