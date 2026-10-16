@@ -45,7 +45,7 @@ class PackageBase:
                         if len(t) == 2:
                             # this is a repeating variable
                             addr = self.model.mf6.xmi.get_var_address(t[-1].upper(), self.model.name, self.pkg_name)
-                            nrep = self.model.mf6.get_value(addr)[0]
+                            nrep = self.model.mf6.get_value(self.model.mf6.var_index(addr))[0]
                             if nrep > 1:
                                 for rep in range(nrep):
                                     bound_vars.append(f"{t[0]}{rep}")
@@ -160,7 +160,7 @@ class PackageBase:
             if self._rhs is None:
                 var_addr = self.model.mf6.xmi.get_var_address("RHS", self.model.name, self.pkg_name)
                 if var_addr in self.model.mf6.get_varset_members("input"):
-                    self._rhs = self.model.mf6.pointers.get_value_ptr(var_addr)
+                    self._rhs = self.model.mf6.pointers.get_value_ptr(self.model.mf6.var_index(var_addr))
                 else:
                     return
 
@@ -181,7 +181,7 @@ class PackageBase:
             if self._hcof is None:
                 var_addr = self.model.mf6.xmi.get_var_address("HCOF", self.model.name, self.pkg_name)
                 if var_addr in self.model.mf6.get_varset_members("input"):
-                    self._hcof = self.model.mf6.pointers.get_value_ptr(var_addr)
+                    self._hcof = self.model.mf6.pointers.get_value_ptr(self.model.mf6.var_index(var_addr))
                 else:
                     return
 

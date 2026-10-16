@@ -35,6 +35,17 @@ class ModflowApi(XmiWrapper):
             timing=timing,
             logger_level=logger_level,
         )
+        self._var_indices: dict[str, int] = {}
+
+    def var_index(self, address: str) -> int:
+        """Get the index of the variable at the address, looked up once."""
+        if address not in self._var_indices:
+            self._var_indices[address] = self.get_var_index(address)
+        return self._var_indices[address]
+
+    def finalize(self) -> None:
+        super().finalize()
+        self._var_indices.clear()
 
     def initialize(
         self,
