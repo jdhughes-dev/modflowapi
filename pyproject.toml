@@ -32,10 +32,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
 requires-python = ">=3.11"
+# BMI 3.0 prototype; xmipy 2 is not released
 dependencies = [
     "numpy>=1.23",
     "pandas>=2.2.2",
-    "xmipy>=1.5.0",
+    "xmipy @ git+https://github.com/jdhughes-dev/modflow6-xmipy@bmi-3",
 ]
 
 [dependency-groups]
@@ -76,6 +77,9 @@ docs = [
 [project.urls]
 Repository = "https://github.com/MODFLOW-ORG/modflowapi"
 Publication = "https://doi.org/10.1016/j.envsoft.2021.105257"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build.targets.sdist]
 only-include = ["modflowapi"]

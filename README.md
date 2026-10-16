@@ -16,6 +16,12 @@
 
 An extension to [xmipy](https://pypi.org/project/xmipy/) for the [MODFLOW API](https://www.usgs.gov/publications/modflow-application-programming-interface-simulationcontrol-and-software).
 
+This branch is a BMI 3.0-alpha1 prototype. It tracks the `bmi-3-development`
+branch of [csdms/bmi](https://github.com/csdms/bmi), requires xmipy from the
+`bmi-3` branch of [jdhughes-dev/modflow6-xmipy](https://github.com/jdhughes-dev/modflow6-xmipy),
+and needs a libmf6 built from the `bmi-3` branch of
+[jdhughes-dev/modflow6](https://github.com/jdhughes-dev/modflow6).
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
