@@ -1,0 +1,80 @@
+name: BMI 3 prototype
+
+# Tests the bmi-3 branch on the jdhughes-dev fork only, against a libmf6 built
+# from the bmi-3 branch of jdhughes-dev/modflow6. The MODFLOW 6 examples run
+# in that repository's bmi3 workflow.
+on:
+  push:
+    branches:
+      - bmi-3
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    if: github.repository_owner == 'jdhughes-dev'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    defaults:
+      run:
+        shell: bash
+    env:
+      FC: gfortran
+      FC_V: 13
+    steps:
+      - name: Checkout modflowapi
+        uses: actions/checkout@v6
+        with:
+          path: modflowapi
+
+      - name: Checkout MF6
+        uses: actions/checkout@v6
+        with:
+          repository: jdhughes-dev/modflow6
+          ref: bmi-3
+          path: modflow6
+
+      - name: Setup ${{ env.FC }} ${{ env.FC_V }}
+        uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: ${{ env.FC_V }}
+
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.11.0
+        with:
+          pixi-version: v0.80.0
+          manifest-path: modflow6/pixi.toml
+
+      - name: Build libmf6
+        working-directory: modflow6
+        run: |
+          pixi run setup builddir
+          pixi run build builddir
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install modflowapi
+        working-directory: modflowapi
+        run: |
+          python -m pip install --upgrade pip
+          # pulls xmipy, and xmipy pulls bmipy, from the bmi-3 branches of the forks
+          pip install -e . flopy "modflow-devtools[dfn,models]>=1.9.1,<2" \
+            "pytest!=8.1.0" pytest-order pytest-xdist filelock
+          pip list | grep -iE "^(bmipy|xmipy|modflowapi) "
+
+      - name: Test
+        working-directory: modflowapi/autotest
+        run: |
+          cp $GITHUB_WORKSPACE/modflow6/bin/libmf6.* .
+          pytest -v -n auto test_interface.py
