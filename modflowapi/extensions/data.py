@@ -74,7 +74,7 @@ class ListInput:
                 var_addr = "/".join(addr_pieces)
 
                 try:
-                    values = self.mf6.get_value_ptr(var_addr)
+                    values = self.mf6.pointers.get_value_ptr(var_addr)
                 except xmipy.errors.InputError:
                     continue
 
@@ -103,7 +103,7 @@ class ListInput:
                     self._dtype.append(dtype)
             else:
                 try:
-                    values = self.mf6.get_value_ptr(var_addr)
+                    values = self.mf6.pointers.get_value_ptr(var_addr)
                 except xmipy.errors.InputError:
                     if self._naux[0] > 0:
                         values = self.mf6.get_value(var_addr)
@@ -442,7 +442,7 @@ class ArrayPointer:
     def _set_array(self):
         ivn = self.mf6.get_varset_members("input")
         if self.var_addr in ivn:
-            values = self.mf6.get_value_ptr(self.var_addr)
+            values = self.mf6.pointers.get_value_ptr(self.var_addr)
             reduced = self.var_addr.split("/")[-1].lower()
             self._vshape = values.shape
             self._ptr = values
@@ -720,8 +720,10 @@ class AdvancedInput(object):
                 var_addr = self.mf6.xmi.get_var_address(name.upper(), package.upper())
 
         try:
-            values = self.mf6.get_value_ptr(var_addr)
-            self._ptrs[name.lower()] = values
+            values = self.mf6.pointers.get_value_ptr(var_addr)
+            # a transient pointer may move, so it is fetched on each access
+            if not self.mf6.is_transient(var_addr):
+                self._ptrs[name.lower()] = values
         except xmipy.errors.InputError:
             values = self.mf6.get_value(var_addr)
 
@@ -850,7 +852,7 @@ class ScalarInput:
         ivn = self.mf6.get_varset_members("input")
         for var_addr in self.var_addrs:
             if var_addr in ivn:
-                ptr = self.mf6.get_value_ptr(var_addr)
+                ptr = self.mf6.pointers.get_value_ptr(var_addr)
                 reduced = var_addr.split("/")[-1].lower()
                 self._ptrs[reduced] = ptr
                 self._reduced_to_var_addr[reduced] = var_addr

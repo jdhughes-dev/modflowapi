@@ -1,12 +1,13 @@
 from collections.abc import Sequence
 from os import PathLike
 
+from bmipy import BmiPointers
 from xmipy import Xmi, XmiWrapper
 
 from .util import amend_libmf6_path
 
 # the BMI extensions the MODFLOW API needs
-EXTENSIONS = ("xmi",)
+EXTENSIONS = ("xmi", "bmi:pointers")
 
 
 class ModflowApi(XmiWrapper):
@@ -14,7 +15,9 @@ class ModflowApi(XmiWrapper):
     The BMI of libmf6, from xmipy's XmiWrapper, with the extensions the
     MODFLOW API uses requested by default.
 
-    The XMI is the extension ``mf6.xmi``.
+    The XMI is the extension ``mf6.xmi`` and pointers to libmf6 memory come
+    from ``mf6.pointers``. A pointer is valid from initialize to finalize
+    unless the variable is in the ``"bmi:pointers:transient"`` set.
     """
 
     def __init__(
@@ -48,3 +51,13 @@ class ModflowApi(XmiWrapper):
     def xmi(self) -> Xmi:
         """The XMI extension."""
         return self.get_extension("xmi")
+
+    @property
+    def pointers(self) -> BmiPointers:
+        """The pointers extension."""
+        return self.get_extension("bmi:pointers")
+
+    def is_transient(self, address: str) -> bool:
+        """True if a pointer to the variable must be fetched again after any
+        call that changes the model state."""
+        return address in self.get_varset_members("bmi:pointers:transient")
