@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
   push:
+    branches-ignore:
+      - bmi-3
   pull_request:
     branches: [main, develop]
   # the release workflow calls this to test a release branch, which a bot
