@@ -49,7 +49,7 @@ def run_simulation(dll, sim_path, callback, verbose=False, _develop=False):
 
     if _develop:
         with open("var_list.txt", "w") as foo:
-            for name in mf6.get_input_var_names():
+            for name in mf6.get_varset_members("input"):
                 foo.write(f"{name}\n")
 
     callback(sim, Callbacks.initialize)

@@ -440,7 +440,7 @@ class ArrayPointer:
         self._set_array()
 
     def _set_array(self):
-        ivn = self.mf6.get_input_var_names()
+        ivn = self.mf6.get_varset_members("input")
         if self.var_addr in ivn:
             values = self.mf6.get_value_ptr(self.var_addr)
             reduced = self.var_addr.split("/")[-1].lower()
@@ -543,7 +543,7 @@ class ArrayInput:
         """
         Method to modflow variable pointers to the _ptrs dictionary
         """
-        ivn = self.mf6.get_input_var_names()
+        ivn = self.mf6.get_varset_members("input")
         for var_addr in self.var_addrs:
             if var_addr in ivn:
                 ptr = ArrayPointer(self.parent, var_addr)
@@ -847,7 +847,7 @@ class ScalarInput:
         """
         Method to modflow variable pointers to the _ptrs dictionary
         """
-        ivn = self.mf6.get_input_var_names()
+        ivn = self.mf6.get_varset_members("input")
         for var_addr in self.var_addrs:
             if var_addr in ivn:
                 ptr = self.mf6.get_value_ptr(var_addr)

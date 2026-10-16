@@ -269,7 +269,7 @@ class ApiSimulation:
         mf6 : ModflowApi
             initialized ModflowApi object
         """
-        variables = mf6.get_input_var_names()
+        variables = mf6.get_varset_members("input")
         model_names = []
         for variable in variables:
             t = variable.split("/")

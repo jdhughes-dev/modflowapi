@@ -55,7 +55,7 @@ class ApiMbase:
         Method to get/set all package names within the model
         """
         pak_types = {"dis": "DIS"}
-        for addr in self.mf6.get_input_var_names():
+        for addr in self.mf6.get_varset_members("input"):
             tmp = addr.split("/")
             if addr.endswith("PACKAGE_TYPE") and tmp[0] == self.name:
                 pak_types[tmp[1]] = self.mf6.get_value(addr)[0]
@@ -263,7 +263,7 @@ class ApiModel(ApiMbase):
         Returns a tuple of the model shape
         """
         if self._shape is None:
-            ivn = self.mf6.get_input_var_names()
+            ivn = self.mf6.get_varset_members("input")
             shape_vars = gridshape[self.dis_type]
             shape = []
             for var in shape_vars:

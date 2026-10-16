@@ -64,7 +64,7 @@ class PackageBase:
 
         for var in self._bound_vars:
             addr_chk = self.model.mf6.get_var_address(var.upper(), self.model.name, self.pkg_name)
-            if addr_chk in self.model.mf6.get_input_var_names():
+            if addr_chk in self.model.mf6.get_varset_members("input"):
                 # change this to use idm
                 self._idm_enabled = True
                 var_addrs.append(addr_chk)
@@ -80,7 +80,7 @@ class PackageBase:
         """
         if self._advanced_var_names is None:
             adv_vars = []
-            for var_addr in self.model.mf6.get_input_var_names():
+            for var_addr in self.model.mf6.get_varset_members("input"):
                 is_advanced = False
                 t = var_addr.split("/")
                 if not self._sim_package:
@@ -159,7 +159,7 @@ class PackageBase:
         if not self._sim_package:
             if self._rhs is None:
                 var_addr = self.model.mf6.get_var_address("RHS", self.model.name, self.pkg_name)
-                if var_addr in self.model.mf6.get_input_var_names():
+                if var_addr in self.model.mf6.get_varset_members("input"):
                     self._rhs = self.model.mf6.get_value_ptr(var_addr)
                 else:
                     return
@@ -180,7 +180,7 @@ class PackageBase:
         if not self._sim_package:
             if self._hcof is None:
                 var_addr = self.model.mf6.get_var_address("HCOF", self.model.name, self.pkg_name)
-                if var_addr in self.model.mf6.get_input_var_names():
+                if var_addr in self.model.mf6.get_varset_members("input"):
                     self._hcof = self.model.mf6.get_value_ptr(var_addr)
                 else:
                     return
