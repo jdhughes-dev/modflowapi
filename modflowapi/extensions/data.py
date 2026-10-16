@@ -48,12 +48,12 @@ class ListInput:
 
         self._spd = spd
         if self.parent._idm_enabled:
+            xmi = self.mf6.xmi
+            model_name, pkg_name = self.parent.model.name, self.parent.pkg_name
             for var in ("BOUND", "AUXVAR"):
-                self.var_addrs.pop(
-                    self.var_addrs.index(self.mf6.get_var_address(var, self.parent.model.name, self.parent.pkg_name))
-                )
+                self.var_addrs.pop(self.var_addrs.index(xmi.get_var_address(var, model_name, pkg_name)))
 
-            self.var_addrs.append(self.mf6.get_var_address("AUXVAR_IDM", self.parent.model.name, self.parent.pkg_name))
+            self.var_addrs.append(xmi.get_var_address("AUXVAR_IDM", model_name, pkg_name))
 
         self._set_data()
 
@@ -710,14 +710,14 @@ class AdvancedInput(object):
 
         if not self.parent._sim_package:
             if self.parent is not None:
-                var_addr = self.mf6.get_var_address(name.upper(), self.parent.model.name, self.parent.pkg_name)
+                var_addr = self.mf6.xmi.get_var_address(name.upper(), self.parent.model.name, self.parent.pkg_name)
             else:
-                var_addr = self.mf6.get_var_address(name.upper(), model.upper(), package.upper())
+                var_addr = self.mf6.xmi.get_var_address(name.upper(), model.upper(), package.upper())
         else:
             if self.parent is not None:
-                var_addr = self.mf6.get_var_address(name.upper(), self.parent.pkg_name)
+                var_addr = self.mf6.xmi.get_var_address(name.upper(), self.parent.pkg_name)
             else:
-                var_addr = self.mf6.get_var_address(name.upper(), package.upper())
+                var_addr = self.mf6.xmi.get_var_address(name.upper(), package.upper())
 
         try:
             values = self.mf6.get_value_ptr(var_addr)
@@ -766,7 +766,7 @@ class AdvancedInput(object):
         if name.lower() not in self._ptrs:
             # this is a set value situation
             self.mf6.set_value(
-                self.mf6.get_var_address(name.upper(), self.parent.model.name, self.parent.pkg_name),
+                self.mf6.xmi.get_var_address(name.upper(), self.parent.model.name, self.parent.pkg_name),
                 values,
             )
         else:

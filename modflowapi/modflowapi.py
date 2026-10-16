@@ -1,19 +1,20 @@
+from collections.abc import Sequence
 from os import PathLike
 
-from xmipy import XmiWrapper
+from xmipy import Xmi, XmiWrapper
 
 from .util import amend_libmf6_path
+
+# the BMI extensions the MODFLOW API needs
+EXTENSIONS = ("xmi",)
 
 
 class ModflowApi(XmiWrapper):
     """
-    This class extends eXtended Model Interface (XMI) Wrapper (XmiWrapper)
-    for the MODFLOW API. XMI extends the CSDMS Basic Model Interface
+    The BMI of libmf6, from xmipy's XmiWrapper, with the extensions the
+    MODFLOW API uses requested by default.
 
-    The extension to the XMI does not change anything in the XMI or BMI
-    interfaces, so models implementing the ModflowApi interface is compatible
-    with the XmiWrapper which provides XMI and BMI functionality.
-
+    The XMI is the extension ``mf6.xmi``.
     """
 
     def __init__(
@@ -31,3 +32,19 @@ class ModflowApi(XmiWrapper):
             timing=timing,
             logger_level=logger_level,
         )
+
+    def initialize(
+        self,
+        config_file: str | PathLike = "",
+        requested_extensions: Sequence[str] = EXTENSIONS,
+    ) -> tuple[str, ...]:
+        supported = super().initialize(config_file, requested_extensions)
+        missing = set(requested_extensions) - set(supported)
+        if missing:
+            raise RuntimeError(f"libmf6 does not support {sorted(missing)}")
+        return supported
+
+    @property
+    def xmi(self) -> Xmi:
+        """The XMI extension."""
+        return self.get_extension("xmi")

@@ -120,11 +120,11 @@ class ApiModel(ApiMbase):
     """
 
     def __init__(self, mf6, name):
-        _id_addr = mf6.get_var_address("ID", name)
+        _id_addr = mf6.xmi.get_var_address("ID", name)
         self._id = mf6.get_value(_id_addr)[0]
         if self._id < 1:
             self._id = 1
-        _solnid = mf6.get_var_address("IDSOLN", name)
+        _solnid = mf6.xmi.get_var_address("IDSOLN", name)
         self._solnid = mf6.get_value(_solnid)[0]
         grid_type = mf6.get_grid_type(self._id)
         if grid_type == "rectilinear":
@@ -208,7 +208,7 @@ class ApiModel(ApiMbase):
         """
         Returns the current stress period
         """
-        var_addr = self.mf6.get_var_address("KPER", "TDIS")
+        var_addr = self.mf6.xmi.get_var_address("KPER", "TDIS")
         return self.mf6.get_value(var_addr)[0] - 1
 
     @property
@@ -216,7 +216,7 @@ class ApiModel(ApiMbase):
         """
         Returns the current timestep
         """
-        var_addr = self.mf6.get_var_address("KSTP", "TDIS")
+        var_addr = self.mf6.xmi.get_var_address("KSTP", "TDIS")
         return self.mf6.get_value(var_addr)[0] - 1
 
     @property
@@ -224,7 +224,7 @@ class ApiModel(ApiMbase):
         """
         Returns the number of timesteps in the current stress period
         """
-        var_addr = self.mf6.get_var_address("NSTP", "TDIS")
+        var_addr = self.mf6.xmi.get_var_address("NSTP", "TDIS")
         return self.mf6.get_value(var_addr)[0]
 
     @property
@@ -232,7 +232,7 @@ class ApiModel(ApiMbase):
         """
         Returns the number of stress periods
         """
-        var_addr = self.mf6.get_var_address("NPER", "TDIS")
+        var_addr = self.mf6.xmi.get_var_address("NPER", "TDIS")
         return self.mf6.get_value(var_addr)[0]
 
     @property
@@ -240,7 +240,7 @@ class ApiModel(ApiMbase):
         """
         Returns the current model time
         """
-        var_addr = self.mf6.get_var_address("TOTIM", "TDIS")
+        var_addr = self.mf6.xmi.get_var_address("TOTIM", "TDIS")
         return self.mf6.get_value(var_addr)[0]
 
     @property
@@ -267,11 +267,11 @@ class ApiModel(ApiMbase):
             shape_vars = gridshape[self.dis_type]
             shape = []
             for var in shape_vars:
-                var_addr = self.mf6.get_var_address(var.upper(), self.name, self.dis_name)
+                var_addr = self.mf6.xmi.get_var_address(var.upper(), self.name, self.dis_name)
                 if var_addr in ivn:
                     shape.append(self.mf6.get_value(var_addr)[0])
             if not shape:
-                var_addr = self.mf6.get_var_address("NODES", self.name, self.dis_name)
+                var_addr = self.mf6.xmi.get_var_address("NODES", self.name, self.dis_name)
                 shape.append(self.mf6.get_value(var_addr)[0])
             self._shape = tuple(shape)
         return self._shape
@@ -309,7 +309,7 @@ class ApiModel(ApiMbase):
         Returns the solution array. Ex. GFW models return heads, GWT
         returns a concentration array, etc...
         """
-        x = self.mf6.get_value(self.mf6.get_var_address("X", self.name))
+        x = self.mf6.get_value(self.mf6.xmi.get_var_address("X", self.name))
         array = np.full(self.size, np.nan)
         array[self.nodetouser] = x[: self.nodetouser.size]
         return array.reshape(self.shape)
@@ -319,15 +319,15 @@ class ApiModel(ApiMbase):
         Sets the node mapping arrays NODEUSER and NODEREDUCED for mapping
         user arrays to modflow's internal arrays
         """
-        node_addr = self.mf6.get_var_address("NODES", self.name, self.dis_name)
+        node_addr = self.mf6.xmi.get_var_address("NODES", self.name, self.dis_name)
         nodes = self.mf6.get_value(node_addr).item()
         if nodes == self.size:
             nodeuser = np.arange(nodes).astype(int)
             nodereduced = np.copy(nodeuser)
         else:
-            nodeuser_addr = self.mf6.get_var_address("NODEUSER", self.name, self.dis_name)
+            nodeuser_addr = self.mf6.xmi.get_var_address("NODEUSER", self.name, self.dis_name)
             nodeuser = self.mf6.get_value(nodeuser_addr) - 1
-            nodereduced_addr = self.mf6.get_var_address("NODEREDUCED", self.name, self.dis_name)
+            nodereduced_addr = self.mf6.xmi.get_var_address("NODEREDUCED", self.name, self.dis_name)
             nodereduced = self.mf6.get_value(nodereduced_addr) - 1
 
         self._nodetouser = nodeuser

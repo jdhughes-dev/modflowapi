@@ -115,7 +115,7 @@ class ApiSimulation:
         """
         Returns the number of subcomponents in the simulation
         """
-        return self.mf6.get_subcomponent_count()
+        return self.mf6.xmi.get_subcomponent_count()
 
     @property
     def solutions(self):
@@ -275,7 +275,7 @@ class ApiSimulation:
             t = variable.split("/")
             if len(t) == 3:
                 name = t[0]
-                id_var_addr = mf6.get_var_address("ID", name)
+                id_var_addr = mf6.xmi.get_var_address("ID", name)
                 if name.startswith("SLN"):
                     continue
                 elif name[3:5] in ("IM", "CO"):
@@ -295,7 +295,7 @@ class ApiSimulation:
             t = variable.split("/")
             if len(t) == 2:
                 name = t[0]
-                id_var_addr = mf6.get_var_address("ID", name)
+                id_var_addr = mf6.xmi.get_var_address("ID", name)
                 if name.lower() in models or name == "TDIS":
                     continue
                 if name[3:5] == "IM":
@@ -314,7 +314,7 @@ class ApiSimulation:
         solution_names = list(set(solution_names))
         solution_dict = {}
         for name in solution_names:
-            sid_var_addr = mf6.get_var_address("ID", name)
+            sid_var_addr = mf6.xmi.get_var_address("ID", name)
             sid = mf6.get_value(sid_var_addr)[0]
             slntype = solution_types[sid - 1]
             sln = ApiSlnPackage(tmpmdl, name, pkg_type=slntype)

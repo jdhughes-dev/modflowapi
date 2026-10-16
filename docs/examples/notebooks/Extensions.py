@@ -58,7 +58,7 @@ mf6.initialize()
 
 # let's advance the model to the first timestep
 dt = mf6.get_time_step()
-mf6.prepare_time_step(dt)
+mf6.xmi.prepare_time_step(dt)
 # -
 
 # ## The `ApiSimulation` object
@@ -279,10 +279,10 @@ wel.get_advanced_var("ibcnum")
 # in MODFLOW 6. The bug has been patched, but the patch has not been released yet. The sequence can
 # be reduced to just `mf6.finalize()` when the patch is released.
 
-mf6.prepare_solve(model.solution_id)
-mf6.solve(model.solution_id)
-mf6.finalize_solve(model.solution_id)
-mf6.finalize_time_step()
+mf6.xmi.prepare_solve(model.solution_id)
+mf6.xmi.solve(model.solution_id)
+mf6.xmi.finalize_solve(model.solution_id)
+mf6.xmi.finalize_time_step()
 mf6.finalize()
 
 # # Putting it all together and running a modflowapi simulation

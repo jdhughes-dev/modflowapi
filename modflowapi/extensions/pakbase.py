@@ -44,7 +44,7 @@ class PackageBase:
                         t = bv.split(":")
                         if len(t) == 2:
                             # this is a repeating variable
-                            addr = self.model.mf6.get_var_address(t[-1].upper(), self.model.name, self.pkg_name)
+                            addr = self.model.mf6.xmi.get_var_address(t[-1].upper(), self.model.name, self.pkg_name)
                             nrep = self.model.mf6.get_value(addr)[0]
                             if nrep > 1:
                                 for rep in range(nrep):
@@ -58,12 +58,12 @@ class PackageBase:
                     var = var[0]
 
                 if sim_package:
-                    var_addrs.append(self.model.mf6.get_var_address(var.upper(), self.pkg_name))
+                    var_addrs.append(self.model.mf6.xmi.get_var_address(var.upper(), self.pkg_name))
                 else:
-                    var_addrs.append(self.model.mf6.get_var_address(var.upper(), self.model.name, self.pkg_name))
+                    var_addrs.append(self.model.mf6.xmi.get_var_address(var.upper(), self.model.name, self.pkg_name))
 
         for var in self._bound_vars:
-            addr_chk = self.model.mf6.get_var_address(var.upper(), self.model.name, self.pkg_name)
+            addr_chk = self.model.mf6.xmi.get_var_address(var.upper(), self.model.name, self.pkg_name)
             if addr_chk in self.model.mf6.get_varset_members("input"):
                 # change this to use idm
                 self._idm_enabled = True
@@ -158,7 +158,7 @@ class PackageBase:
     def rhs(self):
         if not self._sim_package:
             if self._rhs is None:
-                var_addr = self.model.mf6.get_var_address("RHS", self.model.name, self.pkg_name)
+                var_addr = self.model.mf6.xmi.get_var_address("RHS", self.model.name, self.pkg_name)
                 if var_addr in self.model.mf6.get_varset_members("input"):
                     self._rhs = self.model.mf6.get_value_ptr(var_addr)
                 else:
@@ -179,7 +179,7 @@ class PackageBase:
     def hcof(self):
         if not self._sim_package:
             if self._hcof is None:
-                var_addr = self.model.mf6.get_var_address("HCOF", self.model.name, self.pkg_name)
+                var_addr = self.model.mf6.xmi.get_var_address("HCOF", self.model.name, self.pkg_name)
                 if var_addr in self.model.mf6.get_varset_members("input"):
                     self._hcof = self.model.mf6.get_value_ptr(var_addr)
                 else:
@@ -498,7 +498,7 @@ class AdvancedPackage(PackageBase):
                             var = None
 
                     if var is not None:
-                        var_addr = self.model.mf6.get_var_address(var.upper(), self.model.name, self.pkg_name)
+                        var_addr = self.model.mf6.xmi.get_var_address(var.upper(), self.model.name, self.pkg_name)
                         self._sp_var_addrs.append(var_addr)
 
             self._package_vars = ListInput(self, self._package_var_addrs, spd=False)

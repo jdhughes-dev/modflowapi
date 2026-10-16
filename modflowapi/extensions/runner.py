@@ -40,11 +40,12 @@ def run_simulation(dll, sim_path, callback, verbose=False, _develop=False):
     mf6 = ModflowApi(dll, working_directory=sim_path)
 
     if verbose:
-        version = mf6.get_version()
-        print(f"MODFLOW-6 API Version {version}")
         print("Initializing MODFLOW-6 simulation")
 
     mf6.initialize()
+    if verbose:
+        version = mf6.xmi.get_version()
+        print(f"MODFLOW-6 API Version {version}")
     sim = ApiSimulation.load(mf6)
 
     if _develop:
@@ -62,7 +63,7 @@ def run_simulation(dll, sim_path, callback, verbose=False, _develop=False):
 
     while current_time < end_time:
         dt = mf6.get_time_step()
-        mf6.prepare_time_step(dt)
+        mf6.xmi.prepare_time_step(dt)
 
         if verbose:
             print(f"Solving: Stress Period {sim.kper + 1}; Timestep {sim.kstp + 1}")
@@ -76,7 +77,7 @@ def run_simulation(dll, sim_path, callback, verbose=False, _develop=False):
                     models[model.name.lower()] = model
 
             sim_grp = ApiSimulation(mf6, models, solution, sim._exchanges, sim.tdis, sim.ats)
-            mf6.prepare_solve(sol_id)
+            mf6.xmi.prepare_solve(sol_id)
             if sim.kper != kperold[sol_id - 1]:
                 callback(sim_grp, Callbacks.stress_period_start)
                 kperold[sol_id - 1] += 1
@@ -91,7 +92,7 @@ def run_simulation(dll, sim_path, callback, verbose=False, _develop=False):
                 while sim_grp.delt > mindt and kiter < maxiter:
                     sim_grp.iteration = kiter
                     callback(sim_grp, Callbacks.iteration_start)
-                    has_converged = mf6.solve(sol_id)
+                    has_converged = mf6.xmi.solve(sol_id)
                     callback(sim_grp, Callbacks.iteration_end)
                     kiter += 1
                     if has_converged and sim_grp.allow_convergence:
@@ -101,18 +102,18 @@ def run_simulation(dll, sim_path, callback, verbose=False, _develop=False):
                 while kiter < maxiter:
                     sim_grp.iteration = kiter
                     callback(sim_grp, Callbacks.iteration_start)
-                    has_converged = mf6.solve(sol_id)
+                    has_converged = mf6.xmi.solve(sol_id)
                     callback(sim_grp, Callbacks.iteration_end)
                     kiter += 1
                     if has_converged and sim_grp.allow_convergence:
                         break
 
             callback(sim_grp, Callbacks.timestep_end)
-            mf6.finalize_solve(sol_id)
+            mf6.xmi.finalize_solve(sol_id)
             if sim_grp.nstp == sim_grp.kstp + 1:
                 callback(sim_grp, Callbacks.stress_period_end)
 
-        mf6.finalize_time_step()
+        mf6.xmi.finalize_time_step()
         current_time = mf6.get_current_time()
 
         if not has_converged:
