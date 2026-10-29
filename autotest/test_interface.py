@@ -9,6 +9,7 @@ from modflow_devtools.misc import set_dir
 from modflowapi import Callbacks, ModflowApi, run_simulation
 from modflowapi.extensions.apiexchange import ApiExchange
 from modflowapi.extensions.pakbase import AdvancedPackage, ArrayPackage, ListPackage
+from modflowapi.util import libmf6_version
 
 data_pth = Path("../docs/examples/data")
 pytestmark = pytest.mark.extensions
@@ -339,6 +340,43 @@ def test_ats_model(function_tmpdir):
             run_simulation(so, test_pth, callback)
         except Exception as e:
             raise Exception(e)
+
+
+def test_sfr_input_context_names(function_tmpdir):
+    def callback(sim, step):
+        if step != Callbacks.timestep_start or sim.kper != 0 or sim.kstp != 0:
+            return
+        model = sim.get_model()
+        sfr = model.get_package("sfr_0")
+        if libmf6_version(sim.mf6) >= (6, 8, 2):
+            path = f"__INPUT__/{model.name}/SFR_0"
+            names = ("BEDK", "MANNING", "UPSTREAM_FRAC")
+        else:
+            path = f"{model.name}/SFR_0"
+            names = ("HK", "ROUGH", "USTRF")
+        addrs = [f"{path}/{name}" for name in names]
+        for addr in addrs:
+            assert addr in sfr._package_var_addrs, f"{addr} not used"
+
+        pd = sfr.packagedata.values
+        for column, values in expected.items():
+            np.testing.assert_allclose(pd[column], values, err_msg=f"{column} does not match the input")
+
+        pd["hk"] *= 10.0
+        sfr.packagedata = pd
+        np.testing.assert_allclose(sim.mf6.get_value(addrs[0]), pd["hk"], err_msg="hk is not being properly set")
+
+    name = "sfr_model"
+    sim_pth = data_pth / name
+    test_pth = function_tmpdir / name
+    shutil.copytree(sim_pth, test_pth, dirs_exist_ok=True)
+
+    # hk, rough, and ustrf columns of the packagedata block
+    lines = (test_pth / "ex-gwf-sfr-p01.sfr").read_text().lower().split("packagedata")[1].splitlines()
+    rows = [line.split() for line in lines[1:] if line.strip() and not line.strip().startswith("end")]
+    expected = {column: [float(row[i]) for row in rows] for column, i in (("hk", 9), ("rough", 10), ("ustrf", 12))}
+
+    run_simulation(so, test_pth, callback)
 
 
 def test_rhs_hcof_advanced(function_tmpdir):

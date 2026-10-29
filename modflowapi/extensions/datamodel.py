@@ -275,6 +275,16 @@ adv_pkgvars = {
     "maw": {"packagedata": ["nmawwells", ("ifno:range:nmawwells", "radius", "bot", "strt", "ngwfnodes")]},
 }
 
+# advanced package variables read from the input context, keyed by column name,
+# with the input context name and the first libmf6 version that uses it
+adv_input_vars = {
+    "sfr": {
+        "hk": ("BEDK", (6, 8, 2)),
+        "rough": ("MANNING", (6, 8, 2)),
+        "ustrf": ("UPSTREAM_FRAC", (6, 8, 2)),
+    },
+}
+
 
 def get_package_type(pkg_type):
     from .advpaks import LakPackage, MawPackage, SfrPakage, UzfPackage
