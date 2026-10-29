@@ -1,8 +1,8 @@
 import shutil
 from pathlib import Path
 from platform import system
+from textwrap import dedent
 
-import flopy
 import numpy as np
 import pytest
 from modflow_devtools.misc import set_dir
@@ -10,7 +10,6 @@ from modflow_devtools.misc import set_dir
 from modflowapi import Callbacks, ModflowApi, run_simulation
 from modflowapi.extensions.apiexchange import ApiExchange
 from modflowapi.extensions.pakbase import AdvancedPackage, ArrayPackage, ListPackage
-from modflowapi.util import libmf6_version
 
 data_pth = Path("../docs/examples/data")
 pytestmark = pytest.mark.extensions
@@ -354,7 +353,7 @@ def test_sfr_input_context_names(function_tmpdir):
             np.testing.assert_allclose(sfr.packagedata.values["hk"], written["hk"], err_msg="hk write did not persist")
             written["persisted"] = True
             return
-        if libmf6_version(sim.mf6) >= (6, 8, 2):
+        if f"__INPUT__/{model.name}/SFR_0/BEDK" in sim.mf6.get_input_var_names():
             path = f"__INPUT__/{model.name}/SFR_0"
             names = ("BEDK", "MANNING", "UPSTREAM_FRAC")
         else:
@@ -378,47 +377,117 @@ def test_sfr_input_context_names(function_tmpdir):
     # three reaches in a row of three cells; reach 1 flows to reach 2 and
     # diverts to reach 3
     expected = {"hk": [0.1, 0.2, 0.3], "rough": [0.03, 0.035, 0.04], "ustrf": [1.0, 1.0, 0.0]}
-    width = [10.0, 10.0, 5.0]
-    rtp = [9.0, 8.9, 8.9]
-    ncon = [2, 1, 1]
-    ndiv = [1, 0, 0]
-    packagedata = [
-        (
-            i,
-            (0, 0, i),
-            100.0,
-            width[i],
-            0.001,
-            rtp[i],
-            1.0,
-            expected["hk"][i],
-            expected["rough"][i],
-            ncon[i],
-            expected["ustrf"][i],
-            ndiv[i],
+    packagedata = "\n".join(
+        f"  {i + 1} 1 1 {i + 1} 100.0 {width} 0.001 {rtp} 1.0 {hk} {rough} {ncon} {ustrf} {ndiv}"
+        for i, (width, rtp, hk, rough, ncon, ustrf, ndiv) in enumerate(
+            zip(
+                [10.0, 10.0, 5.0],
+                [9.0, 8.9, 8.9],
+                expected["hk"],
+                expected["rough"],
+                [2, 1, 1],
+                expected["ustrf"],
+                [1, 0, 0],
+            )
         )
-        for i in range(3)
-    ]
-
-    test_pth = function_tmpdir / "sfr_model"
-    sim = flopy.mf6.MFSimulation(sim_ws=test_pth)
-    flopy.mf6.ModflowTdis(sim, nper=2, perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)])
-    flopy.mf6.ModflowIms(sim)
-    gwf = flopy.mf6.ModflowGwf(sim, modelname="sfr")
-    flopy.mf6.ModflowGwfdis(gwf, nlay=1, nrow=1, ncol=3, delr=100.0, delc=100.0, top=10.0, botm=0.0)
-    flopy.mf6.ModflowGwfnpf(gwf, k=10.0)
-    flopy.mf6.ModflowGwfic(gwf, strt=8.0)
-    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[((0, 0, 0), 8.0)])
-    flopy.mf6.ModflowGwfsfr(
-        gwf,
-        pname="sfr_0",
-        nreaches=3,
-        packagedata=packagedata,
-        connectiondata=[(0, -1, -2), (1, 0), (2, 0)],
-        diversions=[(0, 0, 2, "UPTO")],
-        perioddata={0: [(0, "INFLOW", 10.0), (0, "DIVERSION", 0, 2.0)]},
     )
-    sim.write_simulation(silent=True)
+    files = {
+        "mfsim.nam": """
+            BEGIN timing
+              TDIS6 sim.tdis
+            END timing
+            BEGIN models
+              gwf6 sfr.nam sfr
+            END models
+            BEGIN exchanges
+            END exchanges
+            BEGIN solutiongroup 1
+              ims6 sim.ims sfr
+            END solutiongroup
+            """,
+        "sim.tdis": """
+            BEGIN dimensions
+              NPER 2
+            END dimensions
+            BEGIN perioddata
+              1.0 1 1.0
+              1.0 1 1.0
+            END perioddata
+            """,
+        "sim.ims": "",
+        "sfr.nam": """
+            BEGIN packages
+              DIS6 sfr.dis dis
+              NPF6 sfr.npf npf
+              IC6 sfr.ic ic
+              CHD6 sfr.chd chd_0
+              SFR6 sfr.sfr sfr_0
+            END packages
+            """,
+        "sfr.dis": """
+            BEGIN dimensions
+              NLAY 1
+              NROW 1
+              NCOL 3
+            END dimensions
+            BEGIN griddata
+              delr
+                CONSTANT 100.0
+              delc
+                CONSTANT 100.0
+              top
+                CONSTANT 10.0
+              botm
+                CONSTANT 0.0
+            END griddata
+            """,
+        "sfr.npf": """
+            BEGIN griddata
+              icelltype
+                CONSTANT 0
+              k
+                CONSTANT 10.0
+            END griddata
+            """,
+        "sfr.ic": """
+            BEGIN griddata
+              strt
+                CONSTANT 8.0
+            END griddata
+            """,
+        "sfr.chd": """
+            BEGIN dimensions
+              MAXBOUND 1
+            END dimensions
+            BEGIN period 1
+              1 1 1 8.0
+            END period
+            """,
+        "sfr.sfr": """
+            BEGIN dimensions
+              NREACHES 3
+            END dimensions
+            BEGIN packagedata
+            {packagedata}
+            END packagedata
+            BEGIN connectiondata
+              1 -2 -3
+              2 1
+              3 1
+            END connectiondata
+            BEGIN diversions
+              1 1 3 UPTO
+            END diversions
+            BEGIN period 1
+              1 INFLOW 10.0
+              1 DIVERSION 1 2.0
+            END period
+            """,
+    }
+    test_pth = function_tmpdir / "sfr_model"
+    test_pth.mkdir()
+    for name, text in files.items():
+        (test_pth / name).write_text(dedent(text).format(packagedata=packagedata))
 
     run_simulation(so, test_pth, callback)
     assert written.get("persisted"), "hk was not checked in the second stress period"

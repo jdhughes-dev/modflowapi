@@ -45,7 +45,6 @@ dev = [
 ]
 test = [
     "filelock",
-    "flopy",
     "modflow-devtools[dfn,models]>=1.9.1,<2",
     "pytest!=8.1.0",
     "pytest-order",
@@ -70,7 +69,6 @@ docs = [
     "jupytext",
     "nbsphinx",
     "ipython",
-    "flopy",
     {include-group = "test"},
 ]
 
