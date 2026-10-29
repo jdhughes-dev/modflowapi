@@ -345,10 +345,15 @@ def test_ats_model(function_tmpdir):
 
 def test_sfr_input_context_names(function_tmpdir):
     def callback(sim, step):
-        if step != Callbacks.timestep_start or sim.kper != 0 or sim.kstp != 0:
+        if step != Callbacks.timestep_start or sim.kstp != 0:
             return
         model = sim.get_model()
         sfr = model.get_package("sfr_0")
+        if sim.kper == 1:
+            # the write persists into the next time step
+            np.testing.assert_allclose(sfr.packagedata.values["hk"], written["hk"], err_msg="hk write did not persist")
+            written["persisted"] = True
+            return
         if libmf6_version(sim.mf6) >= (6, 8, 2):
             path = f"__INPUT__/{model.name}/SFR_0"
             names = ("BEDK", "MANNING", "UPSTREAM_FRAC")
@@ -366,6 +371,9 @@ def test_sfr_input_context_names(function_tmpdir):
         pd["hk"] *= 10.0
         sfr.packagedata = pd
         np.testing.assert_allclose(sim.mf6.get_value(addrs[0]), pd["hk"], err_msg="hk is not being properly set")
+        written["hk"] = pd["hk"].copy()
+
+    written = {}
 
     # three reaches in a row of three cells; reach 1 flows to reach 2 and
     # diverts to reach 3
@@ -413,6 +421,7 @@ def test_sfr_input_context_names(function_tmpdir):
     sim.write_simulation(silent=True)
 
     run_simulation(so, test_pth, callback)
+    assert written.get("persisted"), "hk was not checked in the second stress period"
 
 
 def test_rhs_hcof_advanced(function_tmpdir):
