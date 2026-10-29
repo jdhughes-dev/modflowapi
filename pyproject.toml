@@ -69,6 +69,7 @@ docs = [
     "jupytext",
     "nbsphinx",
     "ipython",
+    "flopy",
     {include-group = "test"},
 ]
 
