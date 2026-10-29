@@ -372,7 +372,7 @@ def test_sfr_input_context_names(function_tmpdir):
     shutil.copytree(sim_pth, test_pth, dirs_exist_ok=True)
 
     # hk, rough, and ustrf columns of the packagedata block
-    lines = (test_pth / "ex-gwf-sfr-p01.sfr").read_text().lower().split("packagedata")[1].splitlines()
+    lines = (test_pth / "sfr.sfr").read_text().lower().split("packagedata")[1].splitlines()
     rows = [line.split() for line in lines[1:] if line.strip() and not line.strip().startswith("end")]
     expected = {column: [float(row[i]) for row in rows] for column, i in (("hk", 9), ("rough", 10), ("ustrf", 12))}
 

@@ -1,0 +1,8 @@
+BEGIN dimensions
+  NPER  2
+END dimensions
+
+BEGIN perioddata
+  1.0  1  1.0
+  1.0  1  1.0
+END perioddata

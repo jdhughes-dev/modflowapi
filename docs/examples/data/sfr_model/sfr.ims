@@ -1,0 +1,13 @@
+BEGIN options
+END options
+
+BEGIN nonlinear
+  OUTER_DVCLOSE  1.0e-6
+  OUTER_MAXIMUM  100
+END nonlinear
+
+BEGIN linear
+  INNER_DVCLOSE  1.0e-8
+  INNER_RCLOSE  1.0e-6
+  INNER_MAXIMUM  100
+END linear
