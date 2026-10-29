@@ -1,16 +1,6 @@
-import re
 from os import PathLike
 from pathlib import Path
 from platform import system
-
-
-def libmf6_version(mf6) -> tuple[int, int, int]:
-    """Return the libmf6 version as a tuple of integers. Ex. (6, 8, 2)"""
-    version = mf6.get_version()
-    match = re.match(r"(\d+)\.(\d+)\.(\d+)", version)
-    if match is None:
-        raise ValueError(f"unrecognized libmf6 version: {version!r}")
-    return tuple(int(i) for i in match.groups())
 
 
 def amend_libmf6_path(path: str | PathLike) -> str:

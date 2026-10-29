@@ -1,6 +1,5 @@
 import numpy as np
 
-from ..util import libmf6_version
 from .data import AdvancedInput, ArrayInput, ListInput, ScalarInput
 from .datamodel import adv_input_vars, adv_pkgvars, pkgvars
 
@@ -472,7 +471,7 @@ class AdvancedPackage(PackageBase):
         self._input_vars = adv_input_vars.get(pkg_type, {})
         self._column_names = {}
         if self._input_vars:
-            self._libmf6_version = libmf6_version(self.model.mf6)
+            self._input_var_names = set(self.model.mf6.get_input_var_names())
 
         if pkg_type in adv_pkgvars:
             self._adv_var_dict = adv_pkgvars[pkg_type]
@@ -557,9 +556,8 @@ class AdvancedPackage(PackageBase):
         """
         var = var_str.lower()
         if var in self._input_vars:
-            name, version = self._input_vars[var]
-            if self._libmf6_version >= version:
-                s = f"__INPUT__/{self.model.name}/{self.pkg_name}/{name}"
+            s = f"__INPUT__/{self.model.name}/{self.pkg_name}/{self._input_vars[var]}"
+            if s in self._input_var_names:
                 self._column_names[s] = var
                 return s
         s = f"{self.model.name}/{self.pkg_name}/{var_str.upper()}"
