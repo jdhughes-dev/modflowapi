@@ -1,7 +1,0 @@
-BEGIN dimensions
-  MAXBOUND  1
-END dimensions
-
-BEGIN period  1
-  1 1 1  8.0
-END period

@@ -1,9 +1,0 @@
-BEGIN options
-END options
-
-BEGIN griddata
-  icelltype
-    CONSTANT  0
-  k
-    CONSTANT  10.0
-END griddata

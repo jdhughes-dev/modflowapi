@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 from platform import system
 
+import flopy
 import numpy as np
 import pytest
 from modflow_devtools.misc import set_dir
@@ -366,15 +367,50 @@ def test_sfr_input_context_names(function_tmpdir):
         sfr.packagedata = pd
         np.testing.assert_allclose(sim.mf6.get_value(addrs[0]), pd["hk"], err_msg="hk is not being properly set")
 
-    name = "sfr_model"
-    sim_pth = data_pth / name
-    test_pth = function_tmpdir / name
-    shutil.copytree(sim_pth, test_pth, dirs_exist_ok=True)
+    # three reaches in a row of three cells; reach 1 flows to reach 2 and
+    # diverts to reach 3
+    expected = {"hk": [0.1, 0.2, 0.3], "rough": [0.03, 0.035, 0.04], "ustrf": [1.0, 1.0, 0.0]}
+    width = [10.0, 10.0, 5.0]
+    rtp = [9.0, 8.9, 8.9]
+    ncon = [2, 1, 1]
+    ndiv = [1, 0, 0]
+    packagedata = [
+        (
+            i,
+            (0, 0, i),
+            100.0,
+            width[i],
+            0.001,
+            rtp[i],
+            1.0,
+            expected["hk"][i],
+            expected["rough"][i],
+            ncon[i],
+            expected["ustrf"][i],
+            ndiv[i],
+        )
+        for i in range(3)
+    ]
 
-    # hk, rough, and ustrf columns of the packagedata block
-    lines = (test_pth / "sfr.sfr").read_text().lower().split("packagedata")[1].splitlines()
-    rows = [line.split() for line in lines[1:] if line.strip() and not line.strip().startswith("end")]
-    expected = {column: [float(row[i]) for row in rows] for column, i in (("hk", 9), ("rough", 10), ("ustrf", 12))}
+    test_pth = function_tmpdir / "sfr_model"
+    sim = flopy.mf6.MFSimulation(sim_ws=test_pth)
+    flopy.mf6.ModflowTdis(sim, nper=2, perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)])
+    flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="sfr")
+    flopy.mf6.ModflowGwfdis(gwf, nlay=1, nrow=1, ncol=3, delr=100.0, delc=100.0, top=10.0, botm=0.0)
+    flopy.mf6.ModflowGwfnpf(gwf, k=10.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=8.0)
+    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[((0, 0, 0), 8.0)])
+    flopy.mf6.ModflowGwfsfr(
+        gwf,
+        pname="sfr_0",
+        nreaches=3,
+        packagedata=packagedata,
+        connectiondata=[(0, -1, -2), (1, 0), (2, 0)],
+        diversions=[(0, 0, 2, "UPTO")],
+        perioddata={0: [(0, "INFLOW", 10.0), (0, "DIVERSION", 0, 2.0)]},
+    )
+    sim.write_simulation(silent=True)
 
     run_simulation(so, test_pth, callback)
 
